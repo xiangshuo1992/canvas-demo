@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>clock01</title>
+    <style>
+        div {
+            text-align: center;
+            margin-top: 250px;
+        }
+
+        /* #clock {
+            border: 1px solid #ccc;
+        } */
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <canvas id="clock" width="200" height="200"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('clock');
+        const context = canvas.getContext('2d');
+        //canvas.height也能获取到
+        // canvas.height = 300;
+        // canvas.width = 300;
+        // console.log(canvas.width)
+
+        let width = context.canvas.width;
+        let height = context.canvas.height;
+        let r = width / 2;
+        //设置时钟的缩放比例，原始大小200
+        let rem = width / 200;
+
+        let drawBackGround = () => {
+            context.save();
+            context.beginPath();
+            context.translate(r, r);
+            context.lineWidth = 10 * rem;
+            context.arc(0, 0, r - context.lineWidth / 2, 0, Math.PI / 180 * 360, false);
+            context.strokeStyle='#000';
+            context.stroke();
+            context.closePath();
+
+            //写数字
+            context.beginPath();            
+            const hourNumbers = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2];
+            context.font = 18 * rem + 'px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            // context.fillStyle = "#00AAAA";
+            hourNumbers.forEach((number, i) => {
+                let rad = 2 * Math.PI / 12 * i;
+                let x = Math.cos(rad) * (r - 30 * rem);
+                let y = Math.sin(rad) * (r - 30 * rem);
+                context.fillText(number, x, y);
+            });
+            context.closePath();
+
+            //画刻度点
+            for (let i = 0; i < 60; i++) {
+                let rad = 2 * Math.PI / 60 * i;
+                let x = Math.cos(rad) * (r - 18 * rem);
+                let y = Math.sin(rad) * (r - 18 * rem);
+                context.beginPath();
+                if (i % 5 === 0) {
+                    context.fillStyle = '#000';
+                    context.arc(x, y, 2 * rem, 0, 2 * Math.PI, false);
+                } else {
+                    context.fillStyle = '#ccc';
+                    context.arc(x, y, 2 * rem, 0, 2 * Math.PI, false);
+                }
+                context.fill();
+            }
+            context.closePath();
+        }
+
+        //画时针
+        let drawHour = (hour, minute) => {
+            context.save();
+            context.beginPath();
+            let hrad = 2 * Math.PI / 12 * hour;
+            let mrad = 2 * Math.PI / 12 / 60 * minute;
+            context.rotate(hrad + mrad);
+            context.lineWidth = 6 * rem;
+            context.lineCap = 'round';
+            context.strokeStyle='#000';
+            context.moveTo(0, 10 * rem);
+            context.lineTo(0, -r / 2);
+            context.stroke();
+            context.closePath();
+            context.restore();
+        }
+
+        //画分针
+        let drawMinute = (minute) => {
+            context.save();
+            context.beginPath();
+            let mrad = 2 * Math.PI / 60 * minute;
+            context.rotate(mrad);
+            context.lineWidth = 3 * rem;
+            context.lineCap = 'round';
+            context.strokeStyle='#000';
+            context.moveTo(0, 10 * rem);
+            context.lineTo(0, -r + 30 * rem);
+            context.stroke();
+            context.closePath();
+            context.restore();
+        }
+
+        //画秒针
+        let drawSecond = (second) => {
+            context.save();
+            context.beginPath();
+            context.fillStyle = '#c14543';
+            let srad = 2 * Math.PI / 60 * second;
+            context.rotate(srad);
+            context.moveTo(-2 * rem, 20 * rem);
+            context.lineTo(2 * rem, 20 * rem);
+            context.lineTo(1, -r + 18 * rem);
+            context.lineTo(-1, -r + 18 * rem);
+            context.fill();
+            context.closePath();
+            context.restore();
+        }
+
+        //画固定点（螺丝）
+        let drawDot = () => {
+            context.beginPath();
+            context.fillStyle = '#fff';
+            context.arc(0, 0, 3 * rem, 0, Math.PI / 180 * 360, false);
+            context.fill();
+            context.closePath();
+        }
+
+        //时间走起来
+        let draw = () => {
+            context.clearRect(0, 0, width, height);
+            let now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let second = now.getSeconds();
+
+            drawBackGround();
+            drawHour(hour, minute);
+            drawMinute(minute);
+            drawSecond(second);
+            drawDot();
+            context.restore();
+        }
+
+        draw();
+        setInterval(draw, 1000);
+
+        // let getNow = ()=>{
+        //     let now = new Date();
+        //     let hour = now.getHours();
+        //     let minute = now.getMinutes();
+        //     let second = now.getSeconds();
+        // }
+    </script>
+
+</body>
+
+</html>

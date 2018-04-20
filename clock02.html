@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>clock02(面向对象版)</title>
+    <style>
+        div {
+            text-align: center;
+            margin-top: 250px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div>
+        <canvas id="clock"></canvas>
+        <canvas id="clock2"></canvas>
+        <canvas id="clock3"></canvas>
+    </div>
+
+    <script>
+        /**
+         * 时钟构造函数（类） 
+         * 
+         * @param string id
+         * @param object config
+         */
+        function Clock(id, config) {
+            this.canvas = document.getElementById(id);
+            this.context = this.canvas.getContext('2d');
+            //默认配置参数
+            this.config = {
+                //canvas宽高
+                width: 200,
+                height: 200,
+                //钟表边框颜色
+                borderColor: '#000',
+                //钟表上数字的颜色
+                numColor: '#000',
+                //刻度小点颜色
+                sPointColor: '#ccc',
+                //刻度大点颜色
+                lPointColor: '#000',
+                //时针颜色
+                hColor: '#000',
+                //分针颜色
+                mColor: '#000',
+                //秒针颜色
+                sColor: '#c14543',
+                //中间固定点（螺丝）颜色
+                dotColor: '#fff'
+            };
+            this.init(config);
+        };
+
+        /**
+         * 初始化方法
+         * 
+         * @param object config
+         */
+        Clock.prototype.init = function (config) {
+            //配置参数合并
+            for (const attr in config) {
+                this.config[attr] = config[attr];
+            }
+
+            this.r = this.config.width / 2;
+            this.rem = this.config.width / 200;
+            this.canvas.width = this.config.width;
+            this.canvas.height = this.config.height;
+
+            //时钟走起来
+            this.draw();
+        };
+
+        /**
+         * 画钟表边框
+         */
+        Clock.prototype.drawClockBorder = function () {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            context.save();
+            context.beginPath();
+            context.translate(r, r);
+            context.lineWidth = 10 * rem;
+            context.arc(0, 0, r - context.lineWidth / 2, 0, Math.PI / 180 * 360, false);
+            context.strokeStyle = this.config.borderColor;
+            context.stroke();
+            context.closePath();
+        };
+
+        /**
+         * 写钟表数字
+         */
+        Clock.prototype.drawNumber = function () {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            context.beginPath();
+            const hourNumbers = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2];
+            context.font = 18 * rem + 'px Arial';
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            context.fillStyle = this.config.numColor;
+            hourNumbers.forEach((number, i) => {
+                let rad = 2 * Math.PI / 12 * i;
+                let x = Math.cos(rad) * (r - 30 * rem);
+                let y = Math.sin(rad) * (r - 30 * rem);
+                context.fillText(number, x, y);
+            });
+            context.closePath();
+        };
+
+        /**
+         * 画刻度点
+         */
+        Clock.prototype.drawScale = function () {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            for (let i = 0; i < 60; i++) {
+                let rad = 2 * Math.PI / 60 * i;
+                let x = Math.cos(rad) * (r - 18 * rem);
+                let y = Math.sin(rad) * (r - 18 * rem);
+                context.beginPath();
+                if (i % 5 === 0) {
+                    context.fillStyle = this.config.lPointColor;
+                    context.arc(x, y, 2 * rem, 0, 2 * Math.PI, false);
+                } else {
+                    context.fillStyle = this.config.sPointColor;
+                    context.arc(x, y, 2 * rem, 0, 2 * Math.PI, false);
+                }
+                context.fill();
+                context.closePath();
+            }
+        };
+
+        /**
+         * 画时针
+         */
+        Clock.prototype.drawHour = function (hour, minute) {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            context.save();
+            context.beginPath();
+            let hrad = 2 * Math.PI / 12 * hour;
+            let mrad = 2 * Math.PI / 12 / 60 * minute;
+            context.rotate(hrad + mrad);
+            context.lineWidth = 6 * rem;
+            context.lineCap = 'round';
+            context.strokeStyle = this.config.hColor;
+            context.moveTo(0, 10 * rem);
+            context.lineTo(0, -r / 2);
+            context.stroke();
+            context.closePath();
+            context.restore();
+        };
+
+        /**
+         * 画分针
+         */
+        Clock.prototype.drawMinute = function (minute) {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            context.save();
+            context.beginPath();
+            let mrad = 2 * Math.PI / 60 * minute;
+            context.rotate(mrad);
+            context.lineWidth = 4 * rem;
+            context.lineCap = 'round';
+            context.strokeStyle = this.config.mColor;
+            context.moveTo(0, 10 * rem);
+            context.lineTo(0, -r + 30 * rem);
+            context.stroke();
+            context.closePath();
+            context.restore();
+        };
+
+        /**
+         * 画秒针
+         */
+        Clock.prototype.drawSecond = function (second) {
+            let context = this.context;
+            let r = this.r;
+            let rem = this.rem;
+
+            context.save();
+            context.beginPath();
+            context.fillStyle = this.config.sColor;
+            let srad = 2 * Math.PI / 60 * second;
+            context.rotate(srad);
+            context.moveTo(-2 * rem, 20 * rem);
+            context.lineTo(2 * rem, 20 * rem);
+            context.lineTo(1, -r + 18 * rem);
+            context.lineTo(-1, -r + 18 * rem);
+            context.fill();
+            context.closePath();
+            context.restore();
+        };
+
+        /**
+         * 画固定点（螺丝）
+         */
+        Clock.prototype.drawDot = function () {
+            let context = this.context;
+            let rem = this.rem;
+
+            context.beginPath();
+            context.fillStyle = this.config.dotColor;
+            context.arc(0, 0, 3 * rem, 0, Math.PI / 180 * 360, false);
+            context.fill();
+            context.closePath();
+        };
+
+        /**
+         * 时间走起来
+         */
+        Clock.prototype.draw = function () {
+            let context = this.context;
+
+            context.clearRect(0, 0, this.config.width, this.config.height);
+            let now = new Date();
+            let hour = now.getHours();
+            let minute = now.getMinutes();
+            let second = now.getSeconds();
+
+            this.drawClockBorder();
+            this.drawNumber();
+            this.drawScale();
+            this.drawHour(hour, minute);
+            this.drawMinute(minute);
+            this.drawSecond(second);
+            this.drawDot();
+            context.restore();
+            //用bind()绑定this对象
+            setInterval(this.draw.bind(this), 1000);
+            // 闭包解决this指向问题
+            /* setInterval(function(_this){return function(){
+                _this.draw();
+            }}(this), 1000); */
+        };
+
+        //实例化一个Clock对象
+        // 默认配置
+        let clock = new Clock('clock');
+
+        let clock2 = new Clock('clock2', {
+            width: 300,
+            height: 300,
+            borderColor: '#76a4bb',
+            sColor: '#000',
+            dotColor: '#cd7f32'
+        });
+
+        let clock3 = new Clock('clock3', {
+            width: 400,
+            height: 400,
+            borderColor: '#4d1518',
+            numColor: '#56181b',
+            //刻度小点颜色
+            sPointColor: '#84686a',
+            //刻度大点颜色
+            lPointColor: '#4d1518',
+            //时针颜色
+            hColor: '#57181d',
+            //分针颜色
+            mColor: '#57181d',
+            //秒针颜色
+            sColor: '#57181d',
+            //中间固定点（螺丝）颜色
+            dotColor: '#be7f65'
+        });
+    </script>
+
+</body>
+
+</html>

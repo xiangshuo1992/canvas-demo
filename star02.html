@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Canvas星空</title>
+</head>
+
+<body>
+
+    <script>
+        var can;
+        var context;
+
+        var w;
+        var h;
+
+        var padLeft = 100;
+        var padTop = 150;
+
+        var girlWidth = 600;
+        var girlHeight = 300;
+
+        var deltaTime;
+        var lastTime;
+
+        var girlPic = new Image();
+        var starPic = new Image();
+
+        var stars = [];
+        var num = 30;
+
+        var alive = 0;
+
+        var switchy = false;
+
+        window.requestAnimFrame = (function () {
+            return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+                function ( /* function FrameRequestCallback */ callback, /* DOMElement Element */ element) {
+                    return window.setTimeout(callback, 1000 / 60);
+                };
+        })();
+
+        function init() {
+            can = document.getElementById('canvas');
+            context = can.getContext('2d');
+
+            w = can.width;
+            h = can.height;
+
+            document.addEventListener('mousemove', mousemove, false);
+
+            girlPic.src = 'src/girl.jpg';
+            starPic.src = 'src/star.png';
+
+            for (var i = 0; i < num; i++) {
+                stars[i] = new starObj();
+                stars[i].init();
+            }
+
+            lastTime = Date.now();
+            gameLoop();
+        }
+
+        function gameLoop() {
+            window.requestAnimFrame(gameLoop);
+            var now = Date.now();
+            deltaTime = now - lastTime;
+            lastTime = now;
+
+            fillCanvas();
+            drawGirl();
+
+            drawStars();
+
+            aliveUpdate();
+        }
+
+        function fillCanvas() {
+            context.fillStyle = '#393550';
+            context.fillRect(0, 0, w, h);
+        }
+
+        function drawGirl() {
+            context.drawImage(girlPic, padLeft, padTop, girlWidth, girlHeight);
+        }
+
+        function mousemove(e) {
+            if (e.offsetX || e.layerX) {
+
+                var px = e.offsetX == undefined ? e.layerX : e.offsetX;
+                var py = e.offsetY == undefined ? e.layerY : e.offsetY;
+
+                if (px > padLeft && px < (padLeft + girlWidth) && py > padTop && py < (padTop + girlHeight)) {
+                    switchy = true;
+                } else {
+                    switchy = false;
+                }
+            }
+        }
+
+        var starObj = function () {
+            this.x;
+            this.y;
+            this.xSpd;
+            this.ySpd;
+            this.picNo;
+            this.timer;
+            this.beta;
+        }
+
+        starObj.prototype.init = function () {
+            this.x = Math.random() * girlWidth + padLeft;
+            this.y = Math.random() * girlHeight + padTop;
+
+            this.xSpd = Math.random() * 0.2 - 0.1;
+            this.ySpd = Math.random() * 0.6 - 0.3;
+
+            this.picNo = Math.floor(Math.random() * 7);
+            this.timer = 0;
+            this.beta = Math.random() * Math.PI * 0.5;
+        }
+
+        starObj.prototype.update = function () {
+            // this.xSpd = Math.random()*0.2-0.1;
+            this.x += this.xSpd;
+            this.y += this.ySpd;
+
+            if (this.x > (padLeft + girlWidth) || this.x < (padLeft - 10)) {
+                this.init();
+            } else if (this.y > (padTop + girlHeight) || this.y < (padTop - 10)) {
+                this.init();
+            }
+
+            this.timer += deltaTime;
+            if (this.timer > 30) {
+                this.picNo += 1;
+                this.picNo %= 7;
+                this.timer = 0;
+            }
+        }
+
+        starObj.prototype.draw = function () {
+            this.beta += deltaTime * 0.005;
+            context.save();
+            context.globalAlpha = Math.sin(this.beta) * alive;
+            context.drawImage(starPic, this.picNo * 7, 0, 7, 7, this.x, this.y, 7, 7);
+            context.restore();
+        }
+
+        function drawStars() {
+            for (var i = 0; i < num; i++) {
+                stars[i].update();
+                stars[i].draw();
+            }
+        }
+
+        function aliveUpdate() {
+            if (switchy) {
+                alive += 0.03;
+                if (alive > 0.7) {
+                    alive = 0.7;
+                }
+            } else {
+                alive -= 0.03;
+                if (alive < 0) {
+                    alive = 0;
+                }
+            }
+        }
+
+        window.onload = function () {
+            init();
+        }
+    </script>
+
+    <div>
+        <canvas id="canvas" width="800px" height="600px"></canvas>
+    </div>
+
+</body>
+
+</html>

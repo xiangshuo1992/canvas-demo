@@ -20,3 +20,5 @@
 [Canvas放大镜效果](https://xiangshuo1992.github.io/canvas-demo/img-magnifier.html)
 
 [Canvas手写涂鸦效果](https://xiangshuo1992.github.io/canvas-demo/handwriting.html)
+
+[Canvas照片探索](https://xiangshuo1992.github.io/canvas-demo/clip.html)

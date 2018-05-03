@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+<title>Canvas 裁剪</title>
+<style>
+body, canvas, div {
+	padding: 0;
+	margin: 0;
+}
+
+a {
+	text-decoration: none;
+}
+
+#can-div {
+	margin: 0 auto;
+	position: relative;
+	overflow: hidden;
+}
+
+.img-blur {
+	display: block;
+	margin: 0 auto;
+	filter: blur(20px);
+	position: absolute;
+	left: 0;
+	z-index: 0;
+}
+
+#canvas {
+	display: block;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 100;
+}
+
+.btn {
+	color: #fff;
+	width: 80px;
+	height: 30px;
+	z-index: 200;
+	border-radius: 5px;
+	text-align: center;
+	line-height: 30px;
+}
+
+#btn-reset {
+	background: #058;
+	position: absolute;
+	bottom: 20px;
+	left: 50px;
+}
+
+#btn-reset:hover {
+	background: #047;
+}
+
+#btn-show {
+	background: #085;
+	position: absolute;
+	bottom: 20px;
+	right: 50px;
+}
+
+#btn-show:hover {
+	background: #074;
+}
+
+</style>
+</head>
+<body>
+
+<div id="can-div">
+	<img class="img-blur" src="src/clip.jpg">
+	<canvas id="canvas"></canvas>
+	<a href="javascript:reset()" class="btn" id="btn-reset">reset</a>
+	<a href="javascript:show()" class="btn" id="btn-show">show</a>
+</div>
+
+<script>
+	var canvasWidth = window.innerWidth;
+	var canvasHeight = window.innerHeight;
+
+	var canvas = document.getElementById('canvas');
+	var context = canvas.getContext('2d');
+	var can_div = document.getElementById('can-div');
+	var can_img = can_div.getElementsByClassName('img-blur')[0];
+	canvas.width = canvasWidth;
+	canvas.height = canvasHeight;
+
+	var img = new Image();
+	var radius = 50;
+	var topMargin = 0;
+	var leftMargin = 0;
+	var clipImg = {
+		x: Math.random()*(canvas.width - 2*radius)+radius,
+		y: Math.random()*(canvasHeight - 2*radius)+radius,
+		r: radius
+	};
+
+	img.src = 'src/clip.jpg';
+
+	img.onload = function(){
+		can_div.style.width = canvasWidth+'px';
+		can_div.style.height = canvasHeight+'px';
+
+		can_img.style.width = img.width+'px';
+		can_img.style.height = img.height+'px';
+
+		topMargin = (img.height - canvas.height)/2;
+		leftMargin = (img.width - canvas.width)/2;
+
+		can_img.style.left = String(-leftMargin)+'px';
+		can_img.style.top = String(-topMargin)+'px';
+
+		initImg();
+		console.log(img.height+' '+canvas.height+' '+topMargin+' '+can_img.offsetTop);
+	console.log(img.width+' '+canvas.width+' '+leftMargin+' '+can_img.offsetLeft);
+	}
+
+	function initImg(){
+		var theLeft = leftMargin<0?-leftMargin:0;
+		var theTop = topMargin<0?-topMargin:0;
+		clipImg = {
+			x: Math.random()*(canvas.width - 2*radius-2*theLeft)+radius+theLeft,
+			y: Math.random()*(canvasHeight - 2*radius-2*theTop)+radius+theTop,
+			r: radius
+		};
+		draw(img,clipImg);
+	}
+
+	function setClipImg(clipImg){
+		context.beginPath();
+		context.arc(clipImg.x,clipImg.y,clipImg.r,0,2*Math.PI);
+		context.clip();
+	}
+
+	function draw(img,clipImg){
+		context.clearRect(0,0,canvasWidth,canvasHeight);
+		context.save();
+		setClipImg(clipImg);
+		context.drawImage(img,
+			Math.max(leftMargin,0),
+			Math.max(topMargin,0),
+			Math.min(canvas.width,img.width),
+			Math.min(canvas.height,img.height),
+			leftMargin<0?-leftMargin:0,
+			topMargin<0?-topMargin:0,
+			Math.min(canvas.width,img.width),
+			Math.min(canvas.height,img.height));
+
+		context.restore();
+	}
+
+	function reset(){
+		if (clipImg.r<=50) {
+			initImg();
+		}else if(clipImg.r>=1000){
+			var timer2 = setInterval(function(){
+				clipImg.r -=50;
+				draw(img,clipImg);
+				if (clipImg.r<=50) {
+					clearInterval(timer2);
+				}
+			},30);
+		}
+	}
+
+	function show(){
+		var timer = setInterval(function(){
+			clipImg.r += 50;
+			draw(img,clipImg);
+			if (clipImg.r>=1000) {
+				clearInterval(timer);
+			}
+		},30);
+	}
+
+</script>
+</body>
+</html>
